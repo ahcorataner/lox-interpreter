@@ -1,7 +1,16 @@
 package lox;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Scanner {
-    public static void main(String[] args) {
-        System.out.println("Olá, Lox!");
+    private final String source;
+
+    public Scanner(String source) {
+        this.source = source;
+    }
+
+    public List<Token> scanTokens() {
+        return new ArrayList<>(); // ainda vazio
     }
 }

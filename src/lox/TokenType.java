@@ -1,7 +1,5 @@
 package lox;
 
-public class TokenType {
-    public static void main(String[] args) {
-        System.out.println("Olá, Lox!");
-    }
+public enum TokenType {
+    // mais pra frente aqui vai os tipos de token
 }
