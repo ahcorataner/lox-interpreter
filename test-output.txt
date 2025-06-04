@@ -1,0 +1,13 @@
+Feitos testes de execução do interpretador Lox
+
+(entrada)
+> + * 10 3 lox 
+
+(saída)
+PLUS + null
+STAR * null
+NUMBER 10 10.0
+NUMBER 3 3.0
+IDENTIFIER lox null
+EOF  null
+>
