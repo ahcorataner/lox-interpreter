@@ -11,16 +11,16 @@ public class Parser {
         this.tokens = tokens;
     }
 
-    // Método público para iniciar o parsing
+    // expressão → igualdade
     public Expr parse() {
         try {
             return expression();
-        } catch (ParseError e) {
-            return null; // Retorna null em caso de erro de parsing
+        } catch (ParseError error) {
+            synchronize();
+            return null;
         }
     }
 
-    // expressão → igualdade
     private Expr expression() {
         return equality();
     }
@@ -145,13 +145,35 @@ public class Parser {
         throw error(peek(), message);
     }
 
-    // Exceção para erro de parse (você pode customizar)
+    // Relata erro e cria exceção ParseError
     private ParseError error(Token token, String message) {
-        System.err.println("[line " + token.line + "] Erro em " +
-                (token.type == EOF ? "fim do arquivo" : "'" + token.lexeme + "'") + ": " + message);
+        Lox.error(token, message);
         return new ParseError();
     }
 
-    // Exceção personalizada para erros de parse
+    // Método para sincronização após erro (modo pânico)
+    private void synchronize() {
+        advance();
+
+        while (!isAtEnd()) {
+            if (previous().type == SEMICOLON) return;
+
+            switch (peek().type) {
+                case CLASS:
+                case FUN:
+                case VAR:
+                case FOR:
+                case IF:
+                case WHILE:
+                case PRINT:
+                case RETURN:
+                    return;
+            }
+
+            advance();
+        }
+    }
+
+    // Exceção interna para erros de parse
     private static class ParseError extends RuntimeException {}
 }
