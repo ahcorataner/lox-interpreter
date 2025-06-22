@@ -1,31 +1,31 @@
 package lox;
 
 import java.util.List;
-
 import static lox.TokenType.*;
 
-class Parser {
-    private static class ParseError extends RuntimeException {}
-
+public class Parser {
     private final List<Token> tokens;
     private int current = 0;
 
-    Parser(List<Token> tokens) {
+    public Parser(List<Token> tokens) {
         this.tokens = tokens;
     }
 
-    Expr parse() {
+    // Método público para iniciar o parsing
+    public Expr parse() {
         try {
             return expression();
-        } catch (ParseError error) {
-            return null;
+        } catch (ParseError e) {
+            return null; // Retorna null em caso de erro de parsing
         }
     }
 
+    // expressão → igualdade
     private Expr expression() {
         return equality();
     }
 
+    // igualdade → comparação ( ( "!=" | "==" ) comparação )* ;
     private Expr equality() {
         Expr expr = comparison();
 
@@ -38,6 +38,7 @@ class Parser {
         return expr;
     }
 
+    // comparação → termo ( ( ">" | ">=" | "<" | "<=" ) termo )* ;
     private Expr comparison() {
         Expr expr = term();
 
@@ -50,6 +51,7 @@ class Parser {
         return expr;
     }
 
+    // termo → fator ( ( "-" | "+" ) fator )* ;
     private Expr term() {
         Expr expr = factor();
 
@@ -62,6 +64,7 @@ class Parser {
         return expr;
     }
 
+    // fator → unário ( ( "/" | "*" ) unário )* ;
     private Expr factor() {
         Expr expr = unary();
 
@@ -74,16 +77,17 @@ class Parser {
         return expr;
     }
 
+    // unário → ( "!" | "-" ) unário | primário ;
     private Expr unary() {
         if (match(BANG, MINUS)) {
             Token operator = previous();
             Expr right = unary();
             return new Expr.Unary(operator, right);
         }
-
         return primary();
     }
 
+    // primário → NUMBER | STRING | "true" | "false" | "nil" | "(" expressão ")" ;
     private Expr primary() {
         if (match(FALSE)) return new Expr.Literal(false);
         if (match(TRUE)) return new Expr.Literal(true);
@@ -95,14 +99,14 @@ class Parser {
 
         if (match(LEFT_PAREN)) {
             Expr expr = expression();
-            consume(RIGHT_PAREN, "Esperado ')' após a expressão.");
+            consume(RIGHT_PAREN, "Espere ')' após expressão.");
             return new Expr.Grouping(expr);
         }
 
-        throw error(peek(), "Esperado expressão.");
+        throw error(peek(), "Esperava expressão.");
     }
 
-    // Métodos utilitários
+    // Utilitários para o parser:
 
     private boolean match(TokenType... types) {
         for (TokenType type : types) {
@@ -111,14 +115,7 @@ class Parser {
                 return true;
             }
         }
-
         return false;
-    }
-
-    private Token consume(TokenType type, String message) {
-        if (check(type)) return advance();
-
-        throw error(peek(), message);
     }
 
     private boolean check(TokenType type) {
@@ -143,30 +140,18 @@ class Parser {
         return tokens.get(current - 1);
     }
 
+    private Token consume(TokenType type, String message) {
+        if (check(type)) return advance();
+        throw error(peek(), message);
+    }
+
+    // Exceção para erro de parse (você pode customizar)
     private ParseError error(Token token, String message) {
-        Lox.error(token.line, message); // <-- aqui estava o erro!
+        System.err.println("[line " + token.line + "] Erro em " +
+                (token.type == EOF ? "fim do arquivo" : "'" + token.lexeme + "'") + ": " + message);
         return new ParseError();
     }
 
-    private void synchronize() {
-        advance();
-
-        while (!isAtEnd()) {
-            if (previous().type == SEMICOLON) return;
-
-            switch (peek().type) {
-                case CLASS:
-                case FUN:
-                case VAR:
-                case FOR:
-                case IF:
-                case WHILE:
-                case PRINT:
-                case RETURN:
-                    return;
-            }
-
-            advance();
-        }
-    }
+    // Exceção personalizada para erros de parse
+    private static class ParseError extends RuntimeException {}
 }
