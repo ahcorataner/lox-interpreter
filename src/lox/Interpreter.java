@@ -1,24 +1,14 @@
 package lox;
 
-import java.util.HashMap;
-import java.util.Map;
+class Interpreter implements Expr.Visitor<Object> {
 
-public class Interpreter implements Expr.Visitor<Object> {
-
-    // Método principal para interpretar uma expressão
-    public Object interpret(Expr expression) {
+    void interpret(Expr expression) {
         try {
             Object value = evaluate(expression);
-            return value;
-        } catch (RuntimeException error) {
-            System.err.println("Erro na interpretação: " + error.getMessage());
-            return null;
+            System.out.println(stringify(value));
+        } catch (RuntimeError error) {
+            Lox.runtimeError(error);
         }
-    }
-
-    // Avalia a expressão chamando accept do Visitor
-    private Object evaluate(Expr expr) {
-        return expr.accept(this);
     }
 
     @Override
@@ -38,12 +28,11 @@ public class Interpreter implements Expr.Visitor<Object> {
         switch (expr.operator.type) {
             case MINUS:
                 checkNumberOperand(expr.operator, right);
-                return -((double) right);
+                return -(double) right;
             case BANG:
                 return !isTruthy(right);
         }
 
-        // Nunca deve chegar aqui
         return null;
     }
 
@@ -53,26 +42,6 @@ public class Interpreter implements Expr.Visitor<Object> {
         Object right = evaluate(expr.right);
 
         switch (expr.operator.type) {
-            case PLUS:
-                if (left instanceof Double && right instanceof Double) {
-                    return (double) left + (double) right;
-                }
-                if (left instanceof String || right instanceof String) {
-                    return stringify(left) + stringify(right);
-                }
-                throw new RuntimeException("Operador '+' exige dois números ou pelo menos um operando string.");
-            case MINUS:
-                checkNumberOperands(expr.operator, left, right);
-                return (double) left - (double) right;
-            case STAR:
-                checkNumberOperands(expr.operator, left, right);
-                return (double) left * (double) right;
-            case SLASH:
-                checkNumberOperands(expr.operator, left, right);
-                if ((double) right == 0) {
-                    throw new RuntimeException("Divisão por zero.");
-                }
-                return (double) left / (double) right;
             case GREATER:
                 checkNumberOperands(expr.operator, left, right);
                 return (double) left > (double) right;
@@ -84,44 +53,76 @@ public class Interpreter implements Expr.Visitor<Object> {
                 return (double) left < (double) right;
             case LESS_EQUAL:
                 checkNumberOperands(expr.operator, left, right);
-                return (double) left <= (double)right;
-            case EQUAL_EQUAL:
-                return isEqual(left, right);
+                return (double) left <= (double) right;
             case BANG_EQUAL:
                 return !isEqual(left, right);
+            case EQUAL_EQUAL:
+                return isEqual(left, right);
+            case MINUS:
+                checkNumberOperands(expr.operator, left, right);
+                return (double) left - (double) right;
+            case PLUS:
+                if (left instanceof Double && right instanceof Double) {
+                    return (double) left + (double) right;
+                }
+
+                if (left instanceof String || right instanceof String) {
+                    return stringify(left) + stringify(right);
+                }
+
+                throw new RuntimeError(expr.operator,
+                        "Operands must be two numbers or two strings.");
+            case SLASH:
+                checkNumberOperands(expr.operator, left, right);
+                if ((double) right == 0) {
+                    throw new RuntimeError(expr.operator, "Division by zero.");
+                }
+                return (double) left / (double) right;
+            case STAR:
+                checkNumberOperands(expr.operator, left, right);
+                return (double) left * (double) right;
         }
 
-        // Nunca deve chegar aqui
         return null;
     }
 
-    // Verifica se o objeto é "truthy"
+    @Override
+    public Object visitTernaryExpr(Expr.Ternary expr) {
+        Object condition = evaluate(expr.condition);
+        if (isTruthy(condition)) {
+            return evaluate(expr.thenBranch);
+        } else {
+            return evaluate(expr.elseBranch);
+        }
+    }
+
+    private Object evaluate(Expr expr) {
+        return expr.accept(this);
+    }
+
+    private void checkNumberOperand(Token operator, Object operand) {
+        if (operand instanceof Double) return;
+        throw new RuntimeError(operator, "Operand must be a number.");
+    }
+
+    private void checkNumberOperands(Token operator, Object left, Object right) {
+        if (left instanceof Double && right instanceof Double) return;
+        throw new RuntimeError(operator, "Operands must be numbers.");
+    }
+
     private boolean isTruthy(Object object) {
         if (object == null) return false;
         if (object instanceof Boolean) return (boolean) object;
         return true;
     }
 
-    // Verifica igualdade, tratando null corretamente
     private boolean isEqual(Object a, Object b) {
         if (a == null && b == null) return true;
         if (a == null) return false;
+
         return a.equals(b);
     }
 
-    // Verifica se operandos são números
-    private void checkNumberOperand(Token operator, Object operand) {
-        if (operand instanceof Double) return;
-        throw new RuntimeException("Operador '" + operator.lexeme + "' exige operando numérico.");
-    }
-
-    // Verifica se ambos operandos são números
-    private void checkNumberOperands(Token operator, Object left, Object right) {
-        if (left instanceof Double && right instanceof Double) return;
-        throw new RuntimeException("Operador '" + operator.lexeme + "' exige operandos numéricos.");
-    }
-
-    // Converte para string, cuidando de doubles inteiros
     private String stringify(Object object) {
         if (object == null) return "nil";
 

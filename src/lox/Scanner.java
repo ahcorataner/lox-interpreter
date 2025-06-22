@@ -76,6 +76,8 @@ class Scanner {
                     addToken(SLASH);
                 }
                 break;
+            case '?': addToken(QUESTION); break;  // novo operador ternário ?
+            case ':': addToken(COLON); break;     // novo operador ternário :
             case ' ':
             case '\r':
             case '\t':

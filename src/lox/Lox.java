@@ -3,17 +3,17 @@ package lox;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
 public class Lox {
     static boolean hadError = false;
+    static boolean hadRuntimeError = false; // Adicionado para rastrear erros de tempo de execução
 
     public static void main(String[] args) throws IOException {
         if (args.length > 1) {
-            System.out.println("Uso: jlox [script]");
+            System.out.println("Usage: jlox [script]");
             System.exit(64);
         } else if (args.length == 1) {
             runFile(args[0]);
@@ -24,10 +24,9 @@ public class Lox {
 
     private static void runFile(String path) throws IOException {
         byte[] bytes = Files.readAllBytes(Paths.get(path));
-        run(new String(bytes, Charset.defaultCharset()));
-
-        // Indica um erro no código de saída.
+        run(new String(bytes));
         if (hadError) System.exit(65);
+        if (hadRuntimeError) System.exit(70); // Código de saída para erros de tempo de execução
     }
 
     private static void runPrompt() throws IOException {
@@ -47,18 +46,42 @@ public class Lox {
         Scanner scanner = new Scanner(source);
         List<Token> tokens = scanner.scanTokens();
 
-        for (Token token : tokens) {
-            System.out.println(token);
+        Parser parser = new Parser(tokens);
+        Expr expression = parser.parse();
+
+        if (hadError) return;
+
+        // Adiciona o interpretador para executar a expressão
+        Interpreter interpreter = new Interpreter();
+        try {
+            interpreter.interpret(expression);
+        } catch (RuntimeError error) {
+            runtimeError(error);
         }
     }
 
+    // Método para reportar erro do scanner (linha + mensagem)
     static void error(int line, String message) {
         report(line, "", message);
     }
 
+    // Método para reportar erro do parser (token + mensagem)
+    static void error(Token token, String message) {
+        if (token.type == TokenType.EOF) {
+            report(token.line, " at end", message);
+        } else {
+            report(token.line, " at '" + token.lexeme + "'", message);
+        }
+    }
+
     private static void report(int line, String where, String message) {
-        System.err.println("[linha " + line + "] Erro" + where + ": " + message);
+        System.err.println("[line " + line + "] Error" + where + ": " + message);
         hadError = true;
     }
-}
 
+    // Método para reportar erros de tempo de execução
+    static void runtimeError(RuntimeError error) {
+        System.err.println(error.getMessage() + "\n[line " + error.token.line + "]");
+        hadRuntimeError = true;
+    }
+}
