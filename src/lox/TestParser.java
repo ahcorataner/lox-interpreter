@@ -4,22 +4,22 @@ import java.util.List;
 
 public class TestParser {
     public static void main(String[] args) {
-        // Código-fonte de teste
-        String source = "-123 * (45.67)";
+        // Código fonte para testar
+        String source = "-123 * (45.67) == 10 + 5";
 
-        // Etapa 1: Scanner transforma string em tokens
+        // 1) Scanner: converte texto em tokens
         Scanner scanner = new Scanner(source);
         List<Token> tokens = scanner.scanTokens();
 
-        // Etapa 2: Parser transforma tokens em AST
+        // 2) Parser: converte tokens em AST
         Parser parser = new Parser(tokens);
         Expr expression = parser.parse();
 
-        // Etapa 3: ASTPrinter exibe a árvore sintática
+        // 3) Imprime a AST
         if (expression != null) {
             System.out.println(new AstPrinter().print(expression));
         } else {
-            System.out.println("Erro ao fazer parsing da expressão.");
+            System.out.println("Erro ao analisar a expressão.");
         }
     }
 }
