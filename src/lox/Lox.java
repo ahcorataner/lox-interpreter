@@ -9,7 +9,9 @@ import java.util.List;
 
 public class Lox {
     static boolean hadError = false;
-    static boolean hadRuntimeError = false; // Adicionado para rastrear erros de tempo de execução
+    static boolean hadRuntimeError = false;
+
+    private static final Interpreter interpreter = new Interpreter();
 
     public static void main(String[] args) throws IOException {
         if (args.length > 1) {
@@ -25,15 +27,16 @@ public class Lox {
     private static void runFile(String path) throws IOException {
         byte[] bytes = Files.readAllBytes(Paths.get(path));
         run(new String(bytes));
+
         if (hadError) System.exit(65);
-        if (hadRuntimeError) System.exit(70); // Código de saída para erros de tempo de execução
+        if (hadRuntimeError) System.exit(70);
     }
 
     private static void runPrompt() throws IOException {
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
 
-        for (;;) {
+        while (true) {
             System.out.print("> ");
             String line = reader.readLine();
             if (line == null) break;
@@ -49,23 +52,17 @@ public class Lox {
         Parser parser = new Parser(tokens);
         Expr expression = parser.parse();
 
-        if (hadError) return;
+        if (hadError || expression == null) return;
 
-        // Adiciona o interpretador para executar a expressão
-        Interpreter interpreter = new Interpreter();
-        try {
-            interpreter.interpret(expression);
-        } catch (RuntimeError error) {
-            runtimeError(error);
-        }
+        interpreter.interpret(expression);
     }
 
-    // Método para reportar erro do scanner (linha + mensagem)
+    // Reporta erro léxico (scanner)
     static void error(int line, String message) {
         report(line, "", message);
     }
 
-    // Método para reportar erro do parser (token + mensagem)
+    // Reporta erro sintático (parser)
     static void error(Token token, String message) {
         if (token.type == TokenType.EOF) {
             report(token.line, " at end", message);
@@ -79,9 +76,9 @@ public class Lox {
         hadError = true;
     }
 
-    // Método para reportar erros de tempo de execução
+    // Reporta erro de tempo de execução (interpretador)
     static void runtimeError(RuntimeError error) {
-        System.err.println(error.getMessage() + "\n[line " + error.token.line + "]");
+        System.err.println("[line " + error.token.line + "] Runtime Error: " + error.getMessage());
         hadRuntimeError = true;
     }
 }
