@@ -57,12 +57,10 @@ public class Lox {
         interpreter.interpret(expression);
     }
 
-    // Reporta erro léxico (scanner)
     static void error(int line, String message) {
         report(line, "", message);
     }
 
-    // Reporta erro sintático (parser)
     static void error(Token token, String message) {
         if (token.type == TokenType.EOF) {
             report(token.line, " at end", message);
@@ -76,7 +74,6 @@ public class Lox {
         hadError = true;
     }
 
-    // Reporta erro de tempo de execução (interpretador)
     static void runtimeError(RuntimeError error) {
         System.err.println("[line " + error.token.line + "] Runtime Error: " + error.getMessage());
         hadRuntimeError = true;
