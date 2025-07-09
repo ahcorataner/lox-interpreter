@@ -7,6 +7,11 @@ public class AstPrinter implements Expr.Visitor<String> {
     }
 
     @Override
+    public String visitAssignExpr(Expr.Assign expr) {
+        return parenthesize("=" + expr.name.lexeme, expr.value);
+    }
+
+    @Override
     public String visitBinaryExpr(Expr.Binary expr) {
         return parenthesize(expr.operator.lexeme, expr.left, expr.right);
     }
@@ -51,12 +56,11 @@ public class AstPrinter implements Expr.Visitor<String> {
     }
 
     public static void main(String[] args) {
-        Expr expression = new Expr.Ternary(
-                new Expr.Literal(true),
-                new Expr.Literal(1),
-                new Expr.Literal(2)
+        Expr expr = new Expr.Assign(
+                new Token(TokenType.IDENTIFIER, "fruta", null, 1),
+                new Expr.Literal("banana")
         );
 
-        System.out.println(new AstPrinter().print(expression));
+        System.out.println(new AstPrinter().print(expr)); // ➜ (=fruta banana)
     }
 }
