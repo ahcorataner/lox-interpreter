@@ -2,6 +2,7 @@ package lox;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays; // ✅ necessário para Arrays.asList
 
 class Parser {
     private static class ParseError extends RuntimeException {}
@@ -13,16 +14,14 @@ class Parser {
         this.tokens = tokens;
     }
 
-    // Retorna uma lista de instruções (statements)
     List<Stmt> parse() {
         List<Stmt> statements = new ArrayList<>();
         while (!isAtEnd()) {
-            statements.add(declaration()); // ✅ agora usa declaração
+            statements.add(declaration());
         }
         return statements;
     }
 
-    // 👇 Adicionado: reconhece declarações, como var
     private Stmt declaration() {
         try {
             if (match(TokenType.VAR)) return varDeclaration();
@@ -33,7 +32,6 @@ class Parser {
         }
     }
 
-    // 👇 Adicionado: declaração de variável
     private Stmt varDeclaration() {
         Token name = consume(TokenType.IDENTIFIER, "Esperado nome da variável.");
 
@@ -46,10 +44,79 @@ class Parser {
         return new Stmt.Var(name, initializer);
     }
 
-    // Instruções
     private Stmt statement() {
+        if (match(TokenType.FOR)) return forStatement();         // ✅ for
+        if (match(TokenType.IF)) return ifStatement();           // ✅ if
+        if (match(TokenType.WHILE)) return whileStatement();     // ✅ while
         if (match(TokenType.PRINT)) return printStatement();
+        if (match(TokenType.LEFT_BRACE)) return new Stmt.Block(block()); // ✅ bloco
         return expressionStatement();
+    }
+
+    private Stmt forStatement() {
+        consume(TokenType.LEFT_PAREN, "Espere '(' depois de 'for'.");
+
+        Stmt initializer;
+        if (match(TokenType.SEMICOLON)) {
+            initializer = null;
+        } else if (match(TokenType.VAR)) {
+            initializer = varDeclaration();
+        } else {
+            initializer = expressionStatement();
+        }
+
+        Expr condition = null;
+        if (!check(TokenType.SEMICOLON)) {
+            condition = expression();
+        }
+        consume(TokenType.SEMICOLON, "Espere ';' após condição de loop.");
+
+        Expr increment = null;
+        if (!check(TokenType.RIGHT_PAREN)) {
+            increment = expression();
+        }
+        consume(TokenType.RIGHT_PAREN, "Espere ')' após cláusulas for.");
+
+        Stmt body = statement();
+
+        if (increment != null) {
+            body = new Stmt.Block(Arrays.asList(
+                    body,
+                    new Stmt.Expression(increment)
+            ));
+        }
+
+        if (condition == null) condition = new Expr.Literal(true);
+        body = new Stmt.While(condition, body);
+
+        if (initializer != null) {
+            body = new Stmt.Block(Arrays.asList(initializer, body));
+        }
+
+        return body;
+    }
+
+    private Stmt ifStatement() {
+        consume(TokenType.LEFT_PAREN, "Esperado '(' após 'if'.");
+        Expr condition = expression();
+        consume(TokenType.RIGHT_PAREN, "Esperado ')' após condição.");
+
+        Stmt thenBranch = statement();
+        Stmt elseBranch = null;
+        if (match(TokenType.ELSE)) {
+            elseBranch = statement();
+        }
+
+        return new Stmt.If(condition, thenBranch, elseBranch);
+    }
+
+    private Stmt whileStatement() {
+        consume(TokenType.LEFT_PAREN, "Esperado '(' após 'while'.");
+        Expr condition = expression();
+        consume(TokenType.RIGHT_PAREN, "Esperado ')' após condição.");
+        Stmt body = statement();
+
+        return new Stmt.While(condition, body);
     }
 
     private Stmt printStatement() {
@@ -64,28 +131,36 @@ class Parser {
         return new Stmt.Expression(expr);
     }
 
-    // EXPRESSÃO PRINCIPAL - menor precedência: vírgula
-    private Expr expression() {
-        return comma();
+    private List<Stmt> block() {
+        List<Stmt> statements = new ArrayList<>();
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            statements.add(declaration());
+        }
+
+        consume(TokenType.RIGHT_BRACE, "Esperado '}' após bloco.");
+        return statements;
     }
 
-    private Expr comma() {
-        Expr expr = ternary();
-        while (match(TokenType.COMMA)) {
+    private Expr expression() {
+        return or(); // ✅ começa com operador lógico OR
+    }
+
+    private Expr or() {
+        Expr expr = and();
+        while (match(TokenType.OR)) {
             Token operator = previous();
-            Expr right = ternary();
-            expr = new Expr.Binary(expr, operator, right);
+            Expr right = and();
+            expr = new Expr.Logical(expr, operator, right);
         }
         return expr;
     }
 
-    private Expr ternary() {
+    private Expr and() {
         Expr expr = equality();
-        if (match(TokenType.QUESTION)) {
-            Expr thenBranch = expression();
-            consume(TokenType.COLON, "Esperado ':' após expressão do operador ternário.");
-            Expr elseBranch = ternary();
-            expr = new Expr.Ternary(expr, thenBranch, elseBranch);
+        while (match(TokenType.AND)) {
+            Token operator = previous();
+            Expr right = equality();
+            expr = new Expr.Logical(expr, operator, right);
         }
         return expr;
     }
@@ -150,7 +225,7 @@ class Parser {
         }
 
         if (match(TokenType.IDENTIFIER)) {
-            return new Expr.Variable(previous()); // ✅ suporte ao uso de variáveis
+            return new Expr.Variable(previous());
         }
 
         if (match(TokenType.LEFT_PAREN)) {
@@ -161,8 +236,6 @@ class Parser {
 
         throw error(peek(), "Esperava expressão.");
     }
-
-    // UTILITÁRIOS
 
     private Token consume(TokenType type, String message) {
         if (check(type)) return advance();
@@ -179,7 +252,6 @@ class Parser {
 
         while (!isAtEnd()) {
             if (previous().type == TokenType.SEMICOLON) return;
-
             switch (peek().type) {
                 case CLASS:
                 case FUN:
@@ -191,7 +263,6 @@ class Parser {
                 case RETURN:
                     return;
             }
-
             advance();
         }
     }
