@@ -11,17 +11,19 @@ public class GenerateAst {
 
         // Gera Expr.java
         defineAst(outputDir, "Expr", Arrays.asList(
-                "Binary   : Expr left, Token operator, Expr right",
-                "Grouping : Expr expression",
-                "Literal  : Object value",
-                "Unary    : Token operator, Expr right",
-                "Ternary  : Expr condition, Expr thenBranch, Expr elseBranch" // ✅ Adicionado!
+                "Binary    : Expr left, Token operator, Expr right",
+                "Grouping  : Expr expression",
+                "Literal   : Object value",
+                "Unary     : Token operator, Expr right",
+                "Ternary   : Expr condition, Expr thenBranch, Expr elseBranch",
+                "Variable  : Token name" // ✅ novo tipo de expressão
         ));
 
         // Gera Stmt.java
         defineAst(outputDir, "Stmt", Arrays.asList(
                 "Expression : Expr expression",
-                "Print      : Expr expression"
+                "Print      : Expr expression",
+                "Var        : Token name, Expr initializer" // ✅ novo tipo de instrução
         ));
     }
 
@@ -47,7 +49,6 @@ public class GenerateAst {
 
         writer.println();
         writer.println("  abstract <R> R accept(Visitor<R> visitor);");
-
         writer.println("}");
         writer.close();
     }
@@ -73,14 +74,11 @@ public class GenerateAst {
 
         // Construtor
         writer.println("    " + className + "(" + fieldList + ") {");
-
-        // Inicializa os campos
         String[] fields = fieldList.split(", ");
         for (String field : fields) {
             String name = field.split(" ")[1];
             writer.println("      this." + name + " = " + name + ";");
         }
-
         writer.println("    }");
 
         // Método accept

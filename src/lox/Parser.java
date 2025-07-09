@@ -17,25 +17,47 @@ class Parser {
     List<Stmt> parse() {
         List<Stmt> statements = new ArrayList<>();
         while (!isAtEnd()) {
-            statements.add(statement());
+            statements.add(declaration()); // ✅ agora usa declaração
         }
         return statements;
     }
 
-    // Determina o tipo de instrução
+    // 👇 Adicionado: reconhece declarações, como var
+    private Stmt declaration() {
+        try {
+            if (match(TokenType.VAR)) return varDeclaration();
+            return statement();
+        } catch (ParseError error) {
+            synchronize();
+            return null;
+        }
+    }
+
+    // 👇 Adicionado: declaração de variável
+    private Stmt varDeclaration() {
+        Token name = consume(TokenType.IDENTIFIER, "Esperado nome da variável.");
+
+        Expr initializer = null;
+        if (match(TokenType.EQUAL)) {
+            initializer = expression();
+        }
+
+        consume(TokenType.SEMICOLON, "Esperado ';' após declaração da variável.");
+        return new Stmt.Var(name, initializer);
+    }
+
+    // Instruções
     private Stmt statement() {
         if (match(TokenType.PRINT)) return printStatement();
         return expressionStatement();
     }
 
-    // Instrução de print
     private Stmt printStatement() {
         Expr value = expression();
         consume(TokenType.SEMICOLON, "Esperado ';' após valor.");
         return new Stmt.Print(value);
     }
 
-    // Instrução de expressão (e.g., apenas avaliar sem print)
     private Stmt expressionStatement() {
         Expr expr = expression();
         consume(TokenType.SEMICOLON, "Esperado ';' após expressão.");
@@ -127,6 +149,10 @@ class Parser {
             return new Expr.Literal(previous().literal);
         }
 
+        if (match(TokenType.IDENTIFIER)) {
+            return new Expr.Variable(previous()); // ✅ suporte ao uso de variáveis
+        }
+
         if (match(TokenType.LEFT_PAREN)) {
             Expr expr = expression();
             consume(TokenType.RIGHT_PAREN, "Esperado ')' após expressão.");
@@ -136,7 +162,8 @@ class Parser {
         throw error(peek(), "Esperava expressão.");
     }
 
-    // Utilitários internos
+    // UTILITÁRIOS
+
     private Token consume(TokenType type, String message) {
         if (check(type)) return advance();
         throw error(peek(), message);
@@ -145,6 +172,28 @@ class Parser {
     private ParseError error(Token token, String message) {
         Lox.error(token, message);
         return new ParseError();
+    }
+
+    private void synchronize() {
+        advance();
+
+        while (!isAtEnd()) {
+            if (previous().type == TokenType.SEMICOLON) return;
+
+            switch (peek().type) {
+                case CLASS:
+                case FUN:
+                case VAR:
+                case FOR:
+                case IF:
+                case WHILE:
+                case PRINT:
+                case RETURN:
+                    return;
+            }
+
+            advance();
+        }
     }
 
     private boolean match(TokenType... types) {
