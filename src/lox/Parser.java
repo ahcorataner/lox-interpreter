@@ -2,7 +2,7 @@ package lox;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Arrays; // ✅ necessário para Arrays.asList
+import java.util.Arrays;
 
 class Parser {
     private static class ParseError extends RuntimeException {}
@@ -45,11 +45,11 @@ class Parser {
     }
 
     private Stmt statement() {
-        if (match(TokenType.FOR)) return forStatement();         // ✅ for
-        if (match(TokenType.IF)) return ifStatement();           // ✅ if
-        if (match(TokenType.WHILE)) return whileStatement();     // ✅ while
+        if (match(TokenType.FOR)) return forStatement();
+        if (match(TokenType.IF)) return ifStatement();
+        if (match(TokenType.WHILE)) return whileStatement();
         if (match(TokenType.PRINT)) return printStatement();
-        if (match(TokenType.LEFT_BRACE)) return new Stmt.Block(block()); // ✅ bloco
+        if (match(TokenType.LEFT_BRACE)) return new Stmt.Block(block());
         return expressionStatement();
     }
 
@@ -142,7 +142,25 @@ class Parser {
     }
 
     private Expr expression() {
-        return or(); // ✅ começa com operador lógico OR
+        return assignment(); // 🔧 atualizado!
+    }
+
+    private Expr assignment() {
+        Expr expr = or();
+
+        if (match(TokenType.EQUAL)) {
+            Token equals = previous();
+            Expr value = assignment();
+
+            if (expr instanceof Expr.Variable) {
+                Token name = ((Expr.Variable) expr).name;
+                return new Expr.Assign(name, value);
+            }
+
+            error(equals, "Alvo inválido para atribuição.");
+        }
+
+        return expr;
     }
 
     private Expr or() {
@@ -249,9 +267,9 @@ class Parser {
 
     private void synchronize() {
         advance();
-
         while (!isAtEnd()) {
             if (previous().type == TokenType.SEMICOLON) return;
+
             switch (peek().type) {
                 case CLASS:
                 case FUN:
@@ -263,6 +281,7 @@ class Parser {
                 case RETURN:
                     return;
             }
+
             advance();
         }
     }
