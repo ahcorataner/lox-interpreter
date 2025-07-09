@@ -3,7 +3,7 @@ package lox;
 import java.util.List;
 
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
-    private final Environment environment = new Environment();
+    private Environment environment = new Environment(); // 🔄 Escopo atual
 
     public void interpret(List<Stmt> statements) {
         try {
@@ -21,6 +21,25 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     private Object evaluate(Expr expr) {
         return expr.accept(this);
+    }
+
+    // 🔹 NOVO: Blocos
+    @Override
+    public Void visitBlockStmt(Stmt.Block stmt) {
+        executeBlock(stmt.statements, new Environment(environment));
+        return null;
+    }
+
+    void executeBlock(List<Stmt> statements, Environment newEnvironment) {
+        Environment previous = this.environment;
+        try {
+            this.environment = newEnvironment;
+            for (Stmt statement : statements) {
+                execute(statement);
+            }
+        } finally {
+            this.environment = previous;
+        }
     }
 
     // PRINT
@@ -55,7 +74,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return environment.get(expr.name);
     }
 
-    // VARIÁVEL: atribuição ✅
+    // VARIÁVEL: atribuição
     @Override
     public Object visitAssignExpr(Expr.Assign expr) {
         Object value = evaluate(expr.value);
@@ -136,11 +155,9 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Object visitTernaryExpr(Expr.Ternary expr) {
         Object condition = evaluate(expr.condition);
-        if (isTruthy(condition)) {
-            return evaluate(expr.thenBranch);
-        } else {
-            return evaluate(expr.elseBranch);
-        }
+        return isTruthy(condition)
+                ? evaluate(expr.thenBranch)
+                : evaluate(expr.elseBranch);
     }
 
     // AUXILIARES
