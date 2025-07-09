@@ -7,13 +7,20 @@ import java.util.List;
 
 public class GenerateAst {
     public static void main(String[] args) throws IOException {
-        String outputDir = "src/lox"; // Caminho onde os arquivos gerados vão ser salvos
+        String outputDir = "src/lox"; // Pasta onde os arquivos gerados serão salvos
 
+        // Gera Expr.java
         defineAst(outputDir, "Expr", Arrays.asList(
                 "Binary   : Expr left, Token operator, Expr right",
                 "Grouping : Expr expression",
                 "Literal  : Object value",
                 "Unary    : Token operator, Expr right"
+        ));
+
+        // Gera Stmt.java
+        defineAst(outputDir, "Stmt", Arrays.asList(
+                "Expression : Expr expression",
+                "Print      : Expr expression"
         ));
     }
 
@@ -39,20 +46,17 @@ public class GenerateAst {
 
         writer.println();
         writer.println("  abstract <R> R accept(Visitor<R> visitor);");
-
         writer.println("}");
         writer.close();
     }
 
     private static void defineVisitor(PrintWriter writer, String baseName, List<String> types) {
         writer.println("  interface Visitor<R> {");
-
         for (String type : types) {
             String typeName = type.split(":")[0].trim();
             writer.println("    R visit" + typeName + baseName + "(" +
                     typeName + " " + baseName.toLowerCase() + ");");
         }
-
         writer.println("  }");
     }
 
@@ -75,7 +79,7 @@ public class GenerateAst {
 
         writer.println("    }");
 
-        // Implementação do método accept
+        // Método accept
         writer.println();
         writer.println("    @Override");
         writer.println("    <R> R accept(Visitor<R> visitor) {");
