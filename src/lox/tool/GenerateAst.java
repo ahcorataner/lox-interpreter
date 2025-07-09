@@ -14,6 +14,7 @@ public class GenerateAst {
                 "Binary     : Expr left, Token operator, Expr right",
                 "Grouping   : Expr expression",
                 "Literal    : Object value",
+                "Logical    : Expr left, Token operator, Expr right", // ✅ NOVO
                 "Unary      : Token operator, Expr right",
                 "Ternary    : Expr condition, Expr thenBranch, Expr elseBranch",
                 "Variable   : Token name"
@@ -22,7 +23,10 @@ public class GenerateAst {
         defineAst(outputDir, "Stmt", Arrays.asList(
                 "Expression : Expr expression",
                 "Print      : Expr expression",
-                "Var        : Token name, Expr initializer"
+                "Var        : Token name, Expr initializer",
+                "Block      : List<Stmt> statements",                 // ✅ NOVO
+                "If         : Expr condition, Stmt thenBranch, Stmt elseBranch", // ✅ NOVO
+                "While      : Expr condition, Stmt body"              // ✅ NOVO
         ));
     }
 
@@ -89,3 +93,4 @@ public class GenerateAst {
         writer.println("  }");
     }
 }
+
