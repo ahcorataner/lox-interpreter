@@ -1,6 +1,7 @@
 package lox;
 
 import java.util.List;
+import java.util.ArrayList;
 
 class Parser {
     private static class ParseError extends RuntimeException {}
@@ -8,18 +9,37 @@ class Parser {
     private final List<Token> tokens;
     private int current = 0;
 
-    boolean hadError = false;
-
     Parser(List<Token> tokens) {
         this.tokens = tokens;
     }
 
-    Expr parse() {
-        try {
-            return expression();
-        } catch (ParseError error) {
-            return null;
+    // Retorna uma lista de instruções (statements)
+    List<Stmt> parse() {
+        List<Stmt> statements = new ArrayList<>();
+        while (!isAtEnd()) {
+            statements.add(statement());
         }
+        return statements;
+    }
+
+    // Determina o tipo de instrução
+    private Stmt statement() {
+        if (match(TokenType.PRINT)) return printStatement();
+        return expressionStatement();
+    }
+
+    // Instrução de print
+    private Stmt printStatement() {
+        Expr value = expression();
+        consume(TokenType.SEMICOLON, "Esperado ';' após valor.");
+        return new Stmt.Print(value);
+    }
+
+    // Instrução de expressão (e.g., apenas avaliar sem print)
+    private Stmt expressionStatement() {
+        Expr expr = expression();
+        consume(TokenType.SEMICOLON, "Esperado ';' após expressão.");
+        return new Stmt.Expression(expr);
     }
 
     // EXPRESSÃO PRINCIPAL - menor precedência: vírgula
@@ -27,79 +47,65 @@ class Parser {
         return comma();
     }
 
-    // Vírgula, associativa à esquerda
     private Expr comma() {
         Expr expr = ternary();
-
         while (match(TokenType.COMMA)) {
             Token operator = previous();
             Expr right = ternary();
             expr = new Expr.Binary(expr, operator, right);
         }
-
         return expr;
     }
 
-    // Operador ternário ? :
     private Expr ternary() {
         Expr expr = equality();
-
         if (match(TokenType.QUESTION)) {
             Expr thenBranch = expression();
             consume(TokenType.COLON, "Esperado ':' após expressão do operador ternário.");
-            Expr elseBranch = ternary();  // associativo à direita
+            Expr elseBranch = ternary();
             expr = new Expr.Ternary(expr, thenBranch, elseBranch);
         }
-
         return expr;
     }
 
     private Expr equality() {
         Expr expr = comparison();
-
         while (match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
             Token operator = previous();
             Expr right = comparison();
             expr = new Expr.Binary(expr, operator, right);
         }
-
         return expr;
     }
 
     private Expr comparison() {
         Expr expr = addition();
-
         while (match(TokenType.GREATER, TokenType.GREATER_EQUAL,
                 TokenType.LESS, TokenType.LESS_EQUAL)) {
             Token operator = previous();
             Expr right = addition();
             expr = new Expr.Binary(expr, operator, right);
         }
-
         return expr;
     }
 
     private Expr addition() {
         Expr expr = multiplication();
-
         while (match(TokenType.MINUS, TokenType.PLUS)) {
             Token operator = previous();
             Expr right = multiplication();
             expr = new Expr.Binary(expr, operator, right);
         }
-
         return expr;
     }
 
     private Expr multiplication() {
         Expr expr = unary();
-
         while (match(TokenType.SLASH, TokenType.STAR)) {
             Token operator = previous();
             Expr right = unary();
             expr = new Expr.Binary(expr, operator, right);
         }
-
         return expr;
     }
 
@@ -109,7 +115,6 @@ class Parser {
             Expr right = unary();
             return new Expr.Unary(operator, right);
         }
-
         return primary();
     }
 
@@ -128,10 +133,10 @@ class Parser {
             return new Expr.Grouping(expr);
         }
 
-        // Se chegar aqui, token não inicia expressão: erro
         throw error(peek(), "Esperava expressão.");
     }
 
+    // Utilitários internos
     private Token consume(TokenType type, String message) {
         if (check(type)) return advance();
         throw error(peek(), message);
@@ -139,7 +144,6 @@ class Parser {
 
     private ParseError error(Token token, String message) {
         Lox.error(token, message);
-        hadError = true;
         return new ParseError();
     }
 

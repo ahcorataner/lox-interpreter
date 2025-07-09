@@ -1,14 +1,34 @@
 package lox;
 
-class Interpreter implements Expr.Visitor<Object> {
+import java.util.List;
 
-    void interpret(Expr expression) {
+class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
+
+    void interpret(List<Stmt> statements) {
         try {
-            Object value = evaluate(expression);
-            System.out.println(stringify(value));
+            for (Stmt stmt : statements) {
+                execute(stmt);
+            }
         } catch (RuntimeError error) {
             Lox.runtimeError(error);
         }
+    }
+
+    private void execute(Stmt stmt) {
+        stmt.accept(this);
+    }
+
+    @Override
+    public Void visitExpressionStmt(Stmt.Expression stmt) {
+        evaluate(stmt.expression);
+        return null;
+    }
+
+    @Override
+    public Void visitPrintStmt(Stmt.Print stmt) {
+        Object value = evaluate(stmt.expression);
+        System.out.println(stringify(value));
+        return null;
     }
 
     @Override
@@ -87,11 +107,7 @@ class Interpreter implements Expr.Visitor<Object> {
     @Override
     public Object visitTernaryExpr(Expr.Ternary expr) {
         Object condition = evaluate(expr.condition);
-        if (isTruthy(condition)) {
-            return evaluate(expr.thenBranch);
-        } else {
-            return evaluate(expr.elseBranch);
-        }
+        return isTruthy(condition) ? evaluate(expr.thenBranch) : evaluate(expr.elseBranch);
     }
 
     private Object evaluate(Expr expr) {
