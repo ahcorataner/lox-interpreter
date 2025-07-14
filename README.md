@@ -26,17 +26,18 @@ Construir, passo a passo, um interpretador completo da linguagem **Lox**, com re
 
 ## 🧠 Capítulos Implementados
 
-| Capítulo | Tema Principal               | Conteúdo                                                                 |
-|----------|------------------------------|--------------------------------------------------------------------------|
-| 4️⃣      | Scanning                     | Scanner, tokens, espaços, comentários                                    |
-| 5️⃣      | Representing Code            | AST com classes para expressões e declarações                            |
-| 6️⃣      | Parsing Expressions          | Parser recursivo com precedência                                         |
-| 7️⃣      | Evaluating Expressions       | Avaliação de expressões matemáticas e lógicas                            |
-| 8️⃣      | Statements and State         | Escopo local, ambiente, variáveis, `print`, `var`                        |
-| 9️⃣      | Control Flow                 | Comandos `if`, `else`, `while`, `for`, blocos `{}` e escopo              |
-| 🔟      | Functions                     | Declaração de funções, chamadas, retorno com `return`                    |
-| 1️⃣1️⃣   | Resolving and Binding        | Escopo léxico, resolução e visibilidade de variáveis                     |
-| 1️⃣2️⃣   | Classes                      | Declaração de classes, inicializador `init`, métodos e uso de `this`     |
+| Capítulo | Tema Principal        | Conteúdo                                                                 |
+|----------|-----------------------|--------------------------------------------------------------------------|
+| 🔢 04     | Scanning              | Scanner, tokens, espaços, comentários                                    |
+| 🔢 05     | Representing Code     | AST com classes para expressões e declarações                            |
+| 🔢 06     | Parsing Expressions   | Parser recursivo com precedência                                         |
+| 🔢 07     | Evaluating Expressions| Avaliação de expressões matemáticas e lógicas                            |
+| 🔢 08     | Statements and State  | Escopo local, ambiente, variáveis, `print`, `var`                        |
+| 🔢 09     | Control Flow          | Comandos `if`, `else`, `while`, `for`, blocos `{}` e escopo              |
+| 🔢 10     | Functions             | Declaração de funções, chamadas, retorno com `return`                    |
+| 🔢 11     | Resolving and Binding | Escopo léxico, resolução e visibilidade de variáveis                     |
+| 🔢 12     | Classes               | Declaração de classes, inicializador `init`, métodos e uso de `this`     |
+
 
 ✅ **Tudo testado e funcionando com sintaxe integrada** 💙
 
