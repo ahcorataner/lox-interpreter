@@ -1,0 +1,37 @@
+fun saudacao(nome) {
+  print "Olá, " + nome + "!";
+}
+
+saudacao("Renata");
+
+fun soma(a, b) {
+  return a + b;
+}
+
+print soma(10, 32); // ➜ 42
+
+fun contador() {
+  var total = 0;
+  fun incrementar() {
+    total = total + 1;
+    print total;
+  }
+  return incrementar;
+}
+
+var contar = contador();
+contar(); // ➜ 1
+contar(); // ➜ 2
+
+fun fib(n) {
+  if (n <= 1) return n;
+  return fib(n - 1) + fib(n - 2);
+}
+
+print fib(6); // ➜ 8
+
+var inicio = clock();
+fib(15); // só pra pesar um pouco!
+var fim = clock();
+
+print "Tempo: " + (fim - inicio) + " segundos";
