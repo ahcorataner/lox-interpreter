@@ -1,56 +1,38 @@
-### IntelliJ IDEA ###
+# 🎯 Arquivos compilados Java
+*.class
+bin/
 out/
-!**/src/main/**/out/
-!**/src/test/**/out/
+test-output.txt
 
-### Eclipse ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-
-### VS Code ###
-.vscode/
-
-### Mac OS ###
-.DS_Store
-
-# Ignora compilados Java
-bin/
-*.class
-
-# Ignora arquivos temporários do Windows
-Thumbs.db
-desktop.ini
-
-# Ignora backups acidentais
-*.bak
-*.tmp
-
-# Ignora arquivos do Bloco de Notas
-*.lox.txt
-# Ignorar compilados
-bin/
-*.class
-
-# Ignorar IntelliJ
+# 🧠 IntelliJ IDEA
 .idea/
 *.iml
 
-# Ignorar arquivos temporários
-out/
-test-output.txt
+# 💻 VS Code
+.vscode/
+
+# 🛠️ Arquivos temporários e backups
 *.tmp
+*.bak
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# 📦 Arquivos de projeto Lox
+*.lox.txt
+
+# 🗃️ Arquivos de outras IDEs (se estiver usando)
+.apt_generated
+.classpath
+.project
+.settings
+.factorypath
+.springBeans
+.sts4-cache
+
+# 🚧 Pastas comuns de build (se existirem)
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
