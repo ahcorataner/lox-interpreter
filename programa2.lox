@@ -1,0 +1,17 @@
+class Conta {
+  init(saldo) {
+    this.saldo = saldo;
+  }
+
+  depositar(valor) {
+    this.saldo = this.saldo + valor;
+  }
+
+  mostrar() {
+    print "Saldo: R$" + this.saldo;
+  }
+}
+
+var c = Conta(100);
+c.depositar(50);
+c.mostrar(); // ➜ Saldo: R$150

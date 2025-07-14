@@ -1,0 +1,19 @@
+fun saudacao(n) {
+  return "Olá, " + n + "!";
+}
+
+var nome = "Renata";
+print saudacao(nome); // ➜ Olá, Renata!
+
+class Pessoa {
+  init(nome) {
+    this.nome = nome;
+  }
+
+  falar() {
+    print "Oi, eu sou " + this.nome + ".";
+  }
+}
+
+var p = Pessoa("Renata");
+p.falar(); // ➜ Oi, eu sou Renata.

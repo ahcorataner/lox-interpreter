@@ -1,3 +1,22 @@
+fun criarSaudacao(nome) {
+  return "Olá, " + nome + "!";
+}
+
+fun somar(a, b) {
+  return a + b;
+}
+
+var nome = "Renata";
+print criarSaudacao(nome);          // ➜ Olá, Renata!
+print somar(20, 22);                // ➜ 42
+
+{
+  var nome = "Oculto";
+  print criarSaudacao(nome);        // ➜ Olá, Oculto!
+}
+// Fora do bloco, escopo volta:
+print criarSaudacao(nome);          // ➜ Olá, Renata!
+
 class Pessoa {
   init(nome) {
     this.nome = nome;
@@ -6,7 +25,13 @@ class Pessoa {
   saudacao() {
     print "Oi, eu sou " + this.nome + ".";
   }
+
+  idadeProxima() {
+    var idade = 25;
+    return idade + 1;
+  }
 }
 
-var r = Pessoa("Renata");
-r.saudacao(); // ➜ Oi, eu sou Renata.
+var p = Pessoa("Renata");
+p.saudacao();                       // ➜ Oi, eu sou Renata.
+print p.idadeProxima();             // ➜ 26
