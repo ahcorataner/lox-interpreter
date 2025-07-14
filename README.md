@@ -44,7 +44,7 @@ Construir, passo a passo, um interpretador completo da linguagem **Lox**, com re
 
 ## 🧪 Testes e Demonstração
 
-Trecho de código válido e testado no interpretador:
+Trecho de código válido e testado:
 
 ```lox
 fun saudacao(nome) {
