@@ -1,6 +1,6 @@
 # 🔥 Interpretador Lox em Java — Compiladores | UFMA 🇧🇷
 
-Projeto desenvolvido para a disciplina **Compiladores** da **Universidade Federal do Maranhão (UFMA)**, no curso de **Engenharia da Computação**.  
+Projeto desenvolvido para a disciplina **Compiladores** da **Universidade Federal do Maranhão (UFMA)**, no curso de **Engenharia da Computação** 
 Implementa um **interpretador funcional da linguagem Lox**, inspirado no livro [_Crafting Interpreters_](https://craftinginterpreters.com/) de **Bob Nystrom**, utilizando **Java 24** com recursos modernos.
 
 ---
