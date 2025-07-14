@@ -30,6 +30,21 @@ public class AstPrinter implements Expr.Visitor<String> {
     }
 
     @Override
+    public String visitGetExpr(Expr.Get expr) {
+        return parenthesize("." + expr.name.lexeme, expr.object);
+    }
+
+    @Override
+    public String visitSetExpr(Expr.Set expr) {
+        return parenthesize("set " + expr.name.lexeme, expr.object, expr.value);
+    }
+
+    @Override
+    public String visitThisExpr(Expr.This expr) {
+        return "this";
+    }
+
+    @Override
     public String visitGroupingExpr(Expr.Grouping expr) {
         return parenthesize("grupo", expr.expression);
     }
@@ -64,8 +79,7 @@ public class AstPrinter implements Expr.Visitor<String> {
         StringBuilder builder = new StringBuilder();
         builder.append("(").append(name);
         for (Expr expr : exprs) {
-            builder.append(" ");
-            builder.append(expr.accept(this));
+            builder.append(" ").append(expr.accept(this));
         }
         builder.append(")");
         return builder.toString();
@@ -73,14 +87,17 @@ public class AstPrinter implements Expr.Visitor<String> {
 
     public static void main(String[] args) {
         Expr expr = new Expr.Call(
-                new Expr.Variable(new Token(TokenType.IDENTIFIER, "soma", null, 1)),
+                new Expr.Get(
+                        new Expr.Variable(new Token(TokenType.IDENTIFIER, "obj", null, 1)),
+                        new Token(TokenType.IDENTIFIER, "metodo", null, 1)
+                ),
                 new Token(TokenType.RIGHT_PAREN, ")", null, 1),
                 List.of(
-                        new Expr.Literal(1),
-                        new Expr.Literal(2)
+                        new Expr.This(new Token(TokenType.THIS, "this", null, 1))
                 )
         );
 
-        System.out.println(new AstPrinter().print(expr)); // ➜ (call soma 1 2)
+        System.out.println(new AstPrinter().print(expr));
+        // ➜ (call (.metodo obj) this)
     }
 }

@@ -5,11 +5,12 @@ import java.util.*;
 abstract class Stmt {
   interface Visitor<R> {
     R visitBlockStmt(Block stmt);
+    R visitClassStmt(Class stmt);
     R visitExpressionStmt(Expression stmt);
-    R visitFunctionStmt(Function stmt);   // ✅ NOVO
+    R visitFunctionStmt(Function stmt);
     R visitIfStmt(If stmt);
     R visitPrintStmt(Print stmt);
-    R visitReturnStmt(Return stmt);       // ✅ NOVO
+    R visitReturnStmt(Return stmt);
     R visitVarStmt(Var stmt);
     R visitWhileStmt(While stmt);
   }
@@ -27,6 +28,21 @@ abstract class Stmt {
     final List<Stmt> statements;
   }
 
+  static class Class extends Stmt {
+    Class(Token name, List<Stmt.Function> methods) {
+      this.name = name;
+      this.methods = methods;
+    }
+
+    @Override
+    <R> R accept(Visitor<R> visitor) {
+      return visitor.visitClassStmt(this);
+    }
+
+    final Token name;
+    final List<Stmt.Function> methods;
+  }
+
   static class Expression extends Stmt {
     Expression(Expr expression) {
       this.expression = expression;
@@ -40,7 +56,7 @@ abstract class Stmt {
     final Expr expression;
   }
 
-  static class Function extends Stmt {     // ✅ NOVO
+  static class Function extends Stmt {
     Function(Token name, List<Token> params, List<Stmt> body) {
       this.name = name;
       this.params = params;
@@ -87,7 +103,7 @@ abstract class Stmt {
     final Expr expression;
   }
 
-  static class Return extends Stmt {       // ✅ NOVO
+  static class Return extends Stmt {
     Return(Token keyword, Expr value) {
       this.keyword = keyword;
       this.value = value;

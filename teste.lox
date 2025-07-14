@@ -1,12 +1,12 @@
-var a = 0;
+class Pessoa {
+  init(nome) {
+    this.nome = nome;
+  }
 
-while (a < 3) {
-  print a;
-  a = a + 1;
+  saudacao() {
+    print "Oi, eu sou " + this.nome + ".";
+  }
 }
 
-if (a == 3) {
-  print "Finalizado!";
-} else {
-  print "Erro!";
-}
+var r = Pessoa("Renata");
+r.saudacao(); // ➜ Oi, eu sou Renata.

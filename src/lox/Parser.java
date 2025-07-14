@@ -24,6 +24,7 @@ class Parser {
 
     private Stmt declaration() {
         try {
+            if (match(TokenType.CLASS)) return classDeclaration();
             if (match(TokenType.FUN)) return function("function");
             if (match(TokenType.VAR)) return varDeclaration();
             return statement();
@@ -31,6 +32,19 @@ class Parser {
             synchronize();
             return null;
         }
+    }
+
+    private Stmt classDeclaration() {
+        Token name = consume(TokenType.IDENTIFIER, "Esperado nome da classe.");
+        consume(TokenType.LEFT_BRACE, "Esperado '{' antes do corpo da classe.");
+
+        List<Stmt.Function> methods = new ArrayList<>();
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            methods.add((Stmt.Function) function("method"));
+        }
+
+        consume(TokenType.RIGHT_BRACE, "Esperado '}' após corpo da classe.");
+        return new Stmt.Class(name, methods);
     }
 
     private Stmt function(String kind) {
@@ -53,13 +67,11 @@ class Parser {
 
     private Stmt varDeclaration() {
         Token name = consume(TokenType.IDENTIFIER, "Esperado nome da variável.");
-
         Expr initializer = null;
         if (match(TokenType.EQUAL)) {
             initializer = expression();
         }
-
-        consume(TokenType.SEMICOLON, "Esperado ';' após declaração da variável.");
+        consume(TokenType.SEMICOLON, "Esperado ';' após declaração de variável.");
         return new Stmt.Var(name, initializer);
     }
 
@@ -73,19 +85,8 @@ class Parser {
         return expressionStatement();
     }
 
-    private Stmt returnStatement() {
-        Token keyword = previous();
-        Expr value = null;
-        if (!check(TokenType.SEMICOLON)) {
-            value = expression();
-        }
-        consume(TokenType.SEMICOLON, "Esperado ';' após retorno.");
-        return new Stmt.Return(keyword, value);
-    }
-
     private Stmt forStatement() {
         consume(TokenType.LEFT_PAREN, "Esperado '(' após 'for'.");
-
         Stmt initializer;
         if (match(TokenType.SEMICOLON)) {
             initializer = null;
@@ -105,8 +106,7 @@ class Parser {
         if (!check(TokenType.RIGHT_PAREN)) {
             increment = expression();
         }
-        consume(TokenType.RIGHT_PAREN, "Esperado ')' após cláusulas for.");
-
+        consume(TokenType.RIGHT_PAREN, "Esperado ')' após cláusula 'for'.");
         Stmt body = statement();
 
         if (increment != null) {
@@ -127,13 +127,11 @@ class Parser {
         consume(TokenType.LEFT_PAREN, "Esperado '(' após 'if'.");
         Expr condition = expression();
         consume(TokenType.RIGHT_PAREN, "Esperado ')' após condição.");
-
         Stmt thenBranch = statement();
         Stmt elseBranch = null;
         if (match(TokenType.ELSE)) {
             elseBranch = statement();
         }
-
         return new Stmt.If(condition, thenBranch, elseBranch);
     }
 
@@ -141,6 +139,16 @@ class Parser {
         Expr value = expression();
         consume(TokenType.SEMICOLON, "Esperado ';' após valor.");
         return new Stmt.Print(value);
+    }
+
+    private Stmt returnStatement() {
+        Token keyword = previous();
+        Expr value = null;
+        if (!check(TokenType.SEMICOLON)) {
+            value = expression();
+        }
+        consume(TokenType.SEMICOLON, "Esperado ';' após 'return'.");
+        return new Stmt.Return(keyword, value);
     }
 
     private Stmt whileStatement() {
@@ -162,7 +170,6 @@ class Parser {
         while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
             statements.add(declaration());
         }
-
         consume(TokenType.RIGHT_BRACE, "Esperado '}' após bloco.");
         return statements;
     }
@@ -173,7 +180,6 @@ class Parser {
 
     private Expr assignment() {
         Expr expr = or();
-
         if (match(TokenType.EQUAL)) {
             Token equals = previous();
             Expr value = assignment();
@@ -181,11 +187,13 @@ class Parser {
             if (expr instanceof Expr.Variable) {
                 Token name = ((Expr.Variable) expr).name;
                 return new Expr.Assign(name, value);
+            } else if (expr instanceof Expr.Get) {
+                Expr.Get get = (Expr.Get) expr;
+                return new Expr.Set(get.object, get.name, value);
             }
 
             error(equals, "Alvo inválido para atribuição.");
         }
-
         return expr;
     }
 
@@ -264,6 +272,9 @@ class Parser {
         while (true) {
             if (match(TokenType.LEFT_PAREN)) {
                 expr = finishCall(expr);
+            } else if (match(TokenType.DOT)) {
+                Token name = consume(TokenType.IDENTIFIER, "Esperado nome da propriedade após '.'.");
+                expr = new Expr.Get(expr, name);
             } else {
                 break;
             }
@@ -285,89 +296,87 @@ class Parser {
         Token paren = consume(TokenType.RIGHT_PAREN, "Esperado ')' após argumentos.");
         return new Expr.Call(callee, paren, arguments);
     }
+    private Expr primary() {
+        if (match(TokenType.FALSE)) return new Expr.Literal(false);
+        if (match(TokenType.TRUE)) return new Expr.Literal(true);
+        if (match(TokenType.NIL)) return new Expr.Literal(null);
 
-        private Expr primary() {
-            if (match(TokenType.FALSE)) return new Expr.Literal(false);
-            if (match(TokenType.TRUE)) return new Expr.Literal(true);
-            if (match(TokenType.NIL)) return new Expr.Literal(null);
-
-            if (match(TokenType.NUMBER, TokenType.STRING)) {
-                return new Expr.Literal(previous().literal);
-            }
-
-            if (match(TokenType.IDENTIFIER)) {
-                return new Expr.Variable(previous());
-            }
-
-            if (match(TokenType.LEFT_PAREN)) {
-                Expr expr = expression();
-                consume(TokenType.RIGHT_PAREN, "Esperado ')' após expressão.");
-                return new Expr.Grouping(expr);
-            }
-
-            throw error(peek(), "Esperava expressão.");
+        if (match(TokenType.NUMBER, TokenType.STRING)) {
+            return new Expr.Literal(previous().literal);
         }
 
-        private Token consume(TokenType type, String message) {
-            if (check(type)) return advance();
-            throw error(peek(), message);
+        if (match(TokenType.THIS)) return new Expr.This(previous());
+        if (match(TokenType.IDENTIFIER)) return new Expr.Variable(previous());
+
+        if (match(TokenType.LEFT_PAREN)) {
+            Expr expr = expression();
+            consume(TokenType.RIGHT_PAREN, "Esperado ')' após expressão.");
+            return new Expr.Grouping(expr);
         }
 
-        private ParseError error(Token token, String message) {
-            Lox.error(token, message);
-            return new ParseError();
-        }
+        throw error(peek(), "Esperava expressão.");
+    }
 
-        private void synchronize() {
-            advance();
-            while (!isAtEnd()) {
-                if (previous().type == TokenType.SEMICOLON) return;
-
-                switch (peek().type) {
-                    case CLASS:
-                    case FUN:
-                    case VAR:
-                    case FOR:
-                    case IF:
-                    case WHILE:
-                    case PRINT:
-                    case RETURN:
-                        return;
-                }
-
+    private boolean match(TokenType... types) {
+        for (TokenType type : types) {
+            if (check(type)) {
                 advance();
+                return true;
             }
         }
+        return false;
+    }
 
-        private boolean match(TokenType... types) {
-            for (TokenType type : types) {
-                if (check(type)) {
-                    advance();
-                    return true;
-                }
+    private boolean check(TokenType type) {
+        if (isAtEnd()) return false;
+        return peek().type == type;
+    }
+
+    private Token advance() {
+        if (!isAtEnd()) current++;
+        return previous();
+    }
+
+    private boolean isAtEnd() {
+        return peek().type == TokenType.EOF;
+    }
+
+    private Token peek() {
+        return tokens.get(current);
+    }
+
+    private Token previous() {
+        return tokens.get(current - 1);
+    }
+
+    private Token consume(TokenType type, String message) {
+        if (check(type)) return advance();
+        throw error(peek(), message);
+    }
+
+    private ParseError error(Token token, String message) {
+        Lox.error(token, message);
+        return new ParseError();
+    }
+
+    private void synchronize() {
+        advance();
+        while (!isAtEnd()) {
+            if (previous().type == TokenType.SEMICOLON) return;
+
+            switch (peek().type) {
+                case CLASS:
+                case FUN:
+                case VAR:
+                case FOR:
+                case IF:
+                case WHILE:
+                case PRINT:
+                case RETURN:
+                    return;
             }
-            return false;
-        }
 
-        private boolean check(TokenType type) {
-            if (isAtEnd()) return false;
-            return peek().type == type;
-        }
-
-        private Token advance() {
-            if (!isAtEnd()) current++;
-            return previous();
-        }
-
-        private boolean isAtEnd() {
-            return peek().type == TokenType.EOF;
-        }
-
-        private Token peek() {
-            return tokens.get(current);
-        }
-
-        private Token previous() {
-            return tokens.get(current - 1);
+            advance();
         }
     }
+}
