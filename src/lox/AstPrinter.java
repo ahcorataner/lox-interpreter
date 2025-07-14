@@ -1,5 +1,7 @@
 package lox;
 
+import java.util.List;
+
 public class AstPrinter implements Expr.Visitor<String> {
 
     String print(Expr expr) {
@@ -14,6 +16,17 @@ public class AstPrinter implements Expr.Visitor<String> {
     @Override
     public String visitBinaryExpr(Expr.Binary expr) {
         return parenthesize(expr.operator.lexeme, expr.left, expr.right);
+    }
+
+    @Override
+    public String visitCallExpr(Expr.Call expr) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("(call ").append(expr.callee.accept(this));
+        for (Expr arg : expr.arguments) {
+            builder.append(" ").append(arg.accept(this));
+        }
+        builder.append(")");
+        return builder.toString();
     }
 
     @Override
@@ -49,23 +62,25 @@ public class AstPrinter implements Expr.Visitor<String> {
 
     private String parenthesize(String name, Expr... exprs) {
         StringBuilder builder = new StringBuilder();
-
         builder.append("(").append(name);
         for (Expr expr : exprs) {
             builder.append(" ");
             builder.append(expr.accept(this));
         }
         builder.append(")");
-
         return builder.toString();
     }
 
     public static void main(String[] args) {
-        Expr expr = new Expr.Assign(
-                new Token(TokenType.IDENTIFIER, "fruta", null, 1),
-                new Expr.Literal("banana")
+        Expr expr = new Expr.Call(
+                new Expr.Variable(new Token(TokenType.IDENTIFIER, "soma", null, 1)),
+                new Token(TokenType.RIGHT_PAREN, ")", null, 1),
+                List.of(
+                        new Expr.Literal(1),
+                        new Expr.Literal(2)
+                )
         );
 
-        System.out.println(new AstPrinter().print(expr)); // ➜ (=fruta banana)
+        System.out.println(new AstPrinter().print(expr)); // ➜ (call soma 1 2)
     }
 }

@@ -27,3 +27,30 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+# Ignora compilados Java
+bin/
+*.class
+
+# Ignora arquivos temporários do Windows
+Thumbs.db
+desktop.ini
+
+# Ignora backups acidentais
+*.bak
+*.tmp
+
+# Ignora arquivos do Bloco de Notas
+*.lox.txt
+# Ignorar compilados
+bin/
+*.class
+
+# Ignorar IntelliJ
+.idea/
+*.iml
+
+# Ignorar arquivos temporários
+out/
+test-output.txt
+*.tmp
