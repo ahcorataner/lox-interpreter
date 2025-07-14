@@ -96,6 +96,21 @@ jlox/
 ├── .gitignore        ← Ignora `.class`, binários e pastas IDE
 ├── README.md         ← Este documento
 ```
+## ✅ Testes de Validação da Entrega Final
+
+- 🔁 Execução no modo REPL testada com:
+  - Variáveis (`var nome = "Renata";`)
+  - Funções (`fun saudacao(n) {...}`)
+  - Classes (`class Pessoa { init(...) {...} }`)
+
+- 📄 Execução de programas completos:
+  - `programa1.lox`: Funções e lógica condicional (`fatorial`, `print`, `if`)
+  - `programa2.lox`: Declaração de classe `Conta`, métodos (`depositar`, `mostrar`), inicializador `init` e instância funcionando
+
+- 🧪 Todos os programas executaram corretamente via:
+  ```bash
+  java --enable-preview -cp bin lox.Lox programa1.lox
+  java --enable-preview -cp bin lox.Lox programa2.lox
 
 ---
 
