@@ -1,0 +1,20 @@
+var a = "global";
+
+{
+  fun showA() {
+    print a;
+  }
+
+  showA();         // Esperado: "global"
+  var a = "local"; // Sombreamento — Resolver garante escopo correto
+  showA();         // Esperado: "global" (se resolvido estaticamente)
+}
+
+var b = b; // ❌ Erro: uso antes de definição
+
+fun f() {
+  var x = "ok";
+  var x = "duplicado"; // ❌ Erro: redefinição no mesmo escopo
+}
+
+return "fora da função"; // ❌ Erro: return em nível global
